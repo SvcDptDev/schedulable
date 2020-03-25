@@ -138,14 +138,15 @@ module Schedulable
       end
 
       def select_time
-        time = Date.today.to_time(:utc)
-        time += self.time.seconds_since_midnight.seconds if self.time.present?
-        return time if created_at.blank?
+        event_time = Time.zone.today.to_time(:utc)
+        event_time = date.to_time(:utc) if date.present?
+        event_time += time.seconds_since_midnight.seconds if time.present?
+        event_return time if created_at.blank?
 
-        return 1.year.from_now.beginning_of_year if self.rule == "yearly"
-        return 1.month.from_now.beginning_of_month if self.rule == "month"
+        return 1.year.from_now.beginning_of_year if rule == "yearly"
+        return 1.month.from_now.beginning_of_month if rule == "month"
 
-        time
+        event_time
       end
     end
   end
