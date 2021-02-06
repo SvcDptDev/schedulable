@@ -151,7 +151,7 @@ module Schedulable
         event_time = Time.zone.today.to_time(:utc)
         event_time = date.to_time(:utc) if date.present?
         event_time += time.seconds_since_midnight.seconds if time.present?
-        event_return time if created_at.blank?
+        # return event_time if created_at.blank?
 
         if rule == "yearly"
           return date.beginning_of_year + 1.year if date.present?
