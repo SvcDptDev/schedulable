@@ -1,6 +1,8 @@
+# frozen_string_literal: true
+
 source "https://rubygems.org"
 
-# Declare your gem's dependencies in schedulable.gemspec.
+# Declare your gem"s dependencies in schedulable.gemspec.
 # Bundler will treat runtime dependencies like base dependencies, and
 # development dependencies will be added by default to the :development group.
 gemspec
@@ -13,11 +15,11 @@ gemspec
 # To use debugger
 # gem 'debugger'
 
-gem 'ice_cube', git: 'git://github.com/joelmeyerhamme/ice_cube.git', branch: 'master'
-gem 'simple_form'
-gem 'rails-i18n', '~> 4.0.0' # For 4.0.x
-gem "date_picker", github: 'benignware/date_picker'
-gem 'database_cleaner'
-gem 'sqlite3'
-gem 'factory_girl_rails', "~> 4.0"
-gem 'turbolinks', :git => 'git://github.com/rails/turbolinks.git'
+gem "database_cleaner"
+gem "date_picker", github: "benignware/date_picker"
+gem "factory_girl_rails", "~> 4.0"
+gem "ice_cube", git: "git://github.com/joelmeyerhamme/ice_cube.git", branch: "master"
+gem "rails-i18n", "~> 4.0.0" # For 4.0.x
+gem "simple_form"
+gem "sqlite3"
+gem "turbolinks", git: "git://github.com/rails/turbolinks.git"

@@ -12,17 +12,17 @@ module Schedulable
 
       validates_presence_of :rule
       validates_presence_of :time
-      validates_presence_of :date, if: Proc.new { |schedule| schedule.rule == 'singular' }
-      validate :validate_day, if: Proc.new { |schedule| schedule.rule == 'weekly' }
-      validate :validate_day_of_week, if: Proc.new { |schedule| schedule.rule == 'monthly' }
+      validates_presence_of :date, if: Proc.new { |schedule| schedule.rule == "singular" }
+      validate :validate_day, if: Proc.new { |schedule| schedule.rule == "weekly" }
+      validate :validate_day_of_week, if: Proc.new { |schedule| schedule.rule == "monthly" }
 
       def to_icecube
-        return @schedule
+        @schedule
       end
 
       def to_s
         message = ""
-        if self.rule == 'singular'
+        if rule == "singular"
           # Return formatted datetime for singular rules
           datetime = DateTime.new(date.year, date.month, date.day, time.hour, time.min, time.sec, time.zone)
           message = I18n.localize(datetime)
@@ -37,13 +37,19 @@ module Schedulable
             I18n.locale = locale
           end
         end
-        return message
+        message
       end
 
-      def method_missing(meth, *args, &block)
-        if @schedule.present? && @schedule.respond_to?(meth)
-          @schedule.send(meth, *args, &block)
+      def method_missing(method_name, *args, &block)
+        if @schedule.present? && @schedule.respond_to?(method_name)
+          @schedule.send(method_name, *args, &block)
+        else
+          super
         end
+      end
+
+      def respond_to_missing?(method_name, include_private = false)
+        (@schedule.present? && @schedule.respond_to?(method_name)) || super
       end
 
       def self.param_names
@@ -56,8 +62,16 @@ module Schedulable
           :count,
           :interval,
           :month_of_year,
-          day: [],
-          day_of_week: [monday: [], tuesday: [], wednesday: [], thursday: [], friday: [], saturday: [], sunday: []]
+          day:         [],
+          day_of_week: [
+            monday:    [],
+            tuesday:   [],
+            wednesday: [],
+            thursday:  [],
+            friday:    [],
+            saturday:  [],
+            sunday:    []
+          ]
         ]
       end
 
@@ -96,8 +110,8 @@ module Schedulable
             end
           end
 
-          if self.day
-            days = self.day.reject(&:empty?)
+          if day
+            days = day.reject(&:empty?)
             if self.rule == "weekly"
               days.each do |day|
                 rule.day(day.to_sym)
@@ -105,7 +119,7 @@ module Schedulable
             elsif self.rule == "monthly"
               days = {}
               day_of_week.each do |weekday, value|
-                days[weekday.to_sym] = value.reject(&:empty?).map { |x| x.to_i }
+                days[weekday.to_sym] = value.reject(&:empty?).map(&:to_i)
               end
               rule.day_of_week(days)
             end
@@ -117,24 +131,20 @@ module Schedulable
       private
 
       def validate_day
-        day.reject! { |c| c.empty? }
-        if !day.any?
-          errors.add(:day, :empty)
-        end
+        day.reject!(&:empty?)
+        errors.add(:day, :empty) unless day.any?
       end
 
       def validate_day_of_week
         any = false
-        day_of_week.each { |key, value|
-          value.reject! { |c| c.empty? }
+        day_of_week.each { |_key, value|
+          value.reject!(&:empty?)
           if value.length > 0
             any = true
             break
           end
         }
-        if !any
-          errors.add(:day_of_week, :empty)
-        end
+        errors.add(:day_of_week, :empty) unless any
       end
 
       def select_time
@@ -143,8 +153,19 @@ module Schedulable
         event_time += time.seconds_since_midnight.seconds if time.present?
         event_return time if created_at.blank?
 
-        return 1.year.from_now.beginning_of_year if rule == "yearly"
-        return 1.month.from_now.beginning_of_month if rule == "month"
+        if rule == "yearly"
+          return date.beginning_of_year + 1.year if date.present?
+
+          # Not sure if these lines should be here for yearly and monthly.
+          # Is there a valid case where date is not present? -nhennig 2021-02-05
+          return 1.year.from_now.beginning_of_year
+        end
+
+        if rule == "month"
+          return date.beginning_of_month + 1.month if date.present?
+
+          return 1.month.from_now.beginning_of_month
+        end
 
         event_time
       end
